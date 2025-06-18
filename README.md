@@ -11,6 +11,13 @@ A fast Rust implementation of LaTeX diff tools, combining the functionality of `
 
 ## Installation
 
+### From binaries
+
+Download the latest release from the [Releases page](https://github.com/mfouesneau/rust-latexdiff/releases)
+
+### From Source
+To build from source, ensure you have [Rust](https://www.rust-lang.org/tools/install) installed, then clone the repository and build:
+
 ```bash
 cargo build --release
 ```
@@ -22,7 +29,7 @@ cargo build --release
 Expand a LaTeX file by including all `\input` and `\include` files:
 
 ```bash
-./target/release/rust-latexdiff expand input.tex -o expanded.tex
+rust-latexdiff expand input.tex -o expanded.tex
 ```
 
 Options:
@@ -34,7 +41,7 @@ Options:
 Compare two LaTeX files and generate a diff:
 
 ```bash
-./target/release/rust-latexdiff diff old.tex new.tex -o diff.tex
+rust-latexdiff diff old.tex new.tex -o diff.tex
 ```
 
 Options:
@@ -48,38 +55,19 @@ Options:
 ### Basic Diff
 ```bash
 # Generate a diff between two LaTeX files
-./target/release/rust-latexdiff diff paper_v1.tex paper_v2.tex -o changes.tex
+rust-latexdiff diff paper_v1.tex paper_v2.tex -o changes.tex
 ```
 
 ### Expand and Diff
 ```bash
 # Expand both files first, then generate diff
-./target/release/rust-latexdiff diff paper_v1.tex paper_v2.tex --expand -o changes.tex
+rust-latexdiff diff paper_v1.tex paper_v2.tex --expand -o changes.tex
 ```
 
 ### Expand Only
 ```bash
 # Create a single file with all includes expanded
-./target/release/rust-latexdiff expand main.tex -o complete.tex
-```
-
-## LaTeX Setup
-
-The generated diff files require the following LaTeX packages in your document preamble:
-
-```latex
-\usepackage{xcolor}
-\usepackage[normalem]{ulem}
-
-% Deletion commands
-\newcommand{\DIFdel}[1]{\textcolor{red}{\sout{#1}}}
-\newcommand{\DIFdelbegin}{\textcolor{red}{\bgroup\sout\bgroup}}
-\newcommand{\DIFdelend}{\egroup\egroup}}
-
-% Addition commands  
-\newcommand{\DIFadd}[1]{\textcolor{blue}{#1}}
-\newcommand{\DIFaddbegin}{\textcolor{blue}{\bgroup}}
-\newcommand{\DIFaddend}{\egroup}}
+rust-latexdiff expand main.tex -o complete.tex
 ```
 
 ## How It Works
