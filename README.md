@@ -2,6 +2,8 @@
 
 A fast Rust implementation of LaTeX diff tools, combining the functionality of `latexdiff` and `latexpand`.
 
+Original tool in Perl: [ctan.org/pkg/latexdiff](https://ctan.org/pkg/latexdiff)
+
 ## Features
 
 - **LaTeX Expansion**: Recursively expand `\input` and `\include` commands to create a single LaTeX file
