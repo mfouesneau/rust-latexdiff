@@ -4,6 +4,7 @@ use std::path::PathBuf;
 
 mod latexpand;
 mod latexdiff;
+mod utils;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]

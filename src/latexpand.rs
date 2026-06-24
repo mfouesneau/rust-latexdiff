@@ -1,7 +1,14 @@
+use crate::utils::{remove_latex_comments, replace_unicode_chars};
+
 use std::path::{Path, PathBuf};
 use std::fs;
 use regex::Regex;
 use anyhow::{Result, Context};
+use once_cell::sync::Lazy;
+
+static INPUT_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"\\input\s*\{([^}]+)\}").unwrap());
+static INCLUDE_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"\\include\s*\{([^}]+)\}").unwrap());
+const CLEARPAGE: &str = "\\clearpage\n";
 
 /// Expand a LaTeX file by recursively including all \input and \include files
 pub fn expand_latex_file(file_path: &Path, keep_comments: bool) -> Result<String> {
@@ -28,21 +35,23 @@ fn expand_recursive(
     processed_files: &mut std::collections::HashSet<PathBuf>,
     result: &mut String,
 ) -> Result<()> {
-    // Regex patterns for \input and \include commands
-    let input_regex = Regex::new(r"\\input\s*\{([^}]+)\}").unwrap();
-    let include_regex = Regex::new(r"\\include\s*\{([^}]+)\}").unwrap();
-    let comment_regex = Regex::new(r"%.*$").unwrap();
-    
     for line in content.lines() {
         let mut processed_line = line.to_string();
         
-        // Remove comments if not keeping them
+        // Remove comments if not keeping them (handle escaped \%)
         if !keep_comments {
-            processed_line = comment_regex.replace(&processed_line, "").to_string();
+            processed_line = remove_latex_comments(&processed_line);
+            // If line becomes empty/whitespace after comment removal, skip it
+            if processed_line.trim().is_empty() {
+                continue;
+            }
         }
         
+        // Replace problematic Unicode chars with LaTeX equivalents
+        processed_line = replace_unicode_chars(&processed_line);
+        
         // Check for \input commands
-        if let Some(captures) = input_regex.captures(&processed_line) {
+        if let Some(captures) = INPUT_REGEX.captures(&processed_line) {
             let filename = &captures[1];
             let file_path = resolve_latex_file_path(base_dir, filename);
             
@@ -74,7 +83,7 @@ fn expand_recursive(
             }
         }
         // Check for \include commands
-        else if let Some(captures) = include_regex.captures(&processed_line) {
+        else if let Some(captures) = INCLUDE_REGEX.captures(&processed_line) {
             let filename = &captures[1];
             let file_path = resolve_latex_file_path(base_dir, filename);
             
@@ -84,12 +93,12 @@ fn expand_recursive(
                     
                     match fs::read_to_string(&path) {
                         Ok(included_content) => {
-                            result.push_str("\\clearpage\n"); // \include implies \clearpage
+                            result.push_str(CLEARPAGE); // \include implies \clearpage
                             result.push_str(&format!("% BEGIN INCLUDED FILE: {}\n", path.display()));
                             expand_recursive(&included_content, path.parent().unwrap_or(base_dir), 
                                            keep_comments, processed_files, result)?;
                             result.push_str(&format!("% END INCLUDED FILE: {}\n", path.display()));
-                            result.push_str("\\clearpage\n");
+                            result.push_str(CLEARPAGE);
                             continue;
                         }
                         Err(_) => {
@@ -117,13 +126,11 @@ fn expand_recursive(
 
 fn resolve_latex_file_path(base_dir: &Path, filename: &str) -> Option<PathBuf> {
     // Try different extensions and paths
-    let extensions = ["", ".tex", ".latex"];
+    let extensions = [".tex", ".latex"];
     
-    for ext in &extensions {
-        let full_filename = format!("{}{}", filename, ext);
-        let path = base_dir.join(&full_filename);
-        
-        if path.exists() {
+    for ext in extensions {
+        let path = base_dir.join(format!("{}{}", filename, ext));
+        if path.is_file() {
             return Some(path);
         }
     }
