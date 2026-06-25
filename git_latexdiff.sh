@@ -83,7 +83,7 @@ fi
 
 # Directories for the two revisions
 CWD=$(pwd)
-TMPDIR=$(mktemp -d /tmp/git-latexdiff.XXXXXX)
+TMPDIR=$(mktemp -d /tmp/git-latexdiff."${oldrev}"."${newrev}")
 
 # create temporary worktrees for the two revisions
 echo "📂 creating temporary (detached) worktrees for the two revisions"
@@ -101,14 +101,24 @@ else
     git worktree add --detach ${NEWREV_DIR} ${newrev}
 fi
 
+# cleanup function to avoid leaving temporary worktrees around
+clean() {
+    echo "🧹 cleaning up"
+    git worktree remove -f ${OLDREV_DIR} || exit 1
+    git worktree remove -f ${NEWREV_DIR} || exit 1
+    rm -rf "${TMPDIR}"
+}
+
 # checking main document
 MAINDOC=${1%.*}
 if ! [ -f "${OLDREV_DIR}/${MAINDOC}.tex" ]; then
-    echo "Main document ${MAINDOC}.tex not found in the older version" 1>&2
+    echo "❌ Main document ${MAINDOC}.tex not found in the older version" 1>&2
+    clean
     exit 1
 fi
 if ! [ -f "${NEWREV_DIR}/${MAINDOC}.tex" ]; then
-    echo "Main document ${MAINDOC}.tex not found in the newer version" 1>&2
+    echo "❌ Main document ${MAINDOC}.tex not found in the newer version" 1>&2
+    clean
     exit 1
 fi
 
@@ -152,9 +162,6 @@ mv ${OUTPUT_PDF} ${CWD}/${DEST_PDF} || exit 1
 
 # step 5: cleanup
 # remove the temporary worktree link and directories
-echo "🧹 cleaning up"
-git worktree remove -f ${OLDREV_DIR} || exit 1
-git worktree remove -f ${NEWREV_DIR} || exit 1
-rm -rf "${TMPDIR}"
+clean
 
 echo "✅ done. output diff document: ${CWD}/${DEST_PDF}"
