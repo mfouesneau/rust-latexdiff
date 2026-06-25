@@ -19,7 +19,6 @@
 TEXCOMPILER_CMD=${TEXCOMPILER_CMD:="tectonic"}
 # Commands for expanding and diffing
 DIFF_BIN=${DIFF_BIN="rust-latexdiff"}
-DIFF_BIN="../target/release/rust-latexdiff"
 
 # Resolve the absolute path of the diff binary
 DIFF_BIN=$(readlink -f "${DIFF_BIN}")
