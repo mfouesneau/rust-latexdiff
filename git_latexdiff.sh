@@ -18,7 +18,7 @@
 # TeX compiler command
 TEXCOMPILER_CMD=${TEXCOMPILER_CMD:="tectonic"}
 # Commands for expanding and diffing
-DIFF_BIN=${DIFF_BIN="rust-latexdiff"}
+DIFF_BIN=${DIFF_BIN="$(which rust-latexdiff)"}
 
 # Resolve the absolute path of the diff binary
 DIFF_BIN=$(readlink -f "${DIFF_BIN}")
@@ -139,7 +139,7 @@ cd "${NEWREV_DIR}" && ${EXPAND_CMD} ${MAINDOC}.tex -o ${MAINDOC}_flat.tex
 # step 2: run latexdiff on the flattened files
 echo "🔍 running latexdiff on the flattened files"
 cd ${CWD}
-${DIFF_CMD} ${OLDREV_DIR}/${MAINDOC}_flat.tex ${NEWREV_DIR}/${MAINDOC}_flat.tex -o ${OUTPUT_DOC} || exit 1
+${DIFF_CMD} -o ${OUTPUT_DOC} ${OLDREV_DIR}/${MAINDOC}_flat.tex ${NEWREV_DIR}/${MAINDOC}_flat.tex || exit 1
 
 # step 3: compile the output document
 echo "📄 compiling the output document"
