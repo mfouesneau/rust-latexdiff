@@ -83,7 +83,14 @@ fi
 
 # Directories for the two revisions
 CWD=$(pwd)
-TMPDIR=$(mktemp -d /tmp/git-latexdiff."${oldrev}"."${newrev}")
+
+TMPDIR="/tmp/git-latexdiff.${oldrev}.${newrev}"
+
+if [ -d "${TMPDIR}" ]; then
+    echo "⚠️ temporary directory ${TMPDIR} already exists" 1>&2
+else
+    mkdir -p "${TMPDIR}"
+fi
 
 # create temporary worktrees for the two revisions
 echo "📂 creating temporary (detached) worktrees for the two revisions"
@@ -112,12 +119,12 @@ clean() {
 # checking main document
 MAINDOC=${1%.*}
 if ! [ -f "${OLDREV_DIR}/${MAINDOC}.tex" ]; then
-    echo "❌ Main document ${MAINDOC}.tex not found in the older version" 1>&2
+    echo "❌ Main document ${MAINDOC}.tex not found in the older version (${OLDREV_DIR}/)" 1>&2
     clean
     exit 1
 fi
 if ! [ -f "${NEWREV_DIR}/${MAINDOC}.tex" ]; then
-    echo "❌ Main document ${MAINDOC}.tex not found in the newer version" 1>&2
+    echo "❌ Main document ${MAINDOC}.tex not found in the newer version (${NEWREV_DIR}/)" 1>&2
     clean
     exit 1
 fi
